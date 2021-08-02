@@ -1,73 +1,59 @@
-﻿// dllmain.cpp : 定义 DLL 应用程序的入口点。
+﻿#include "HID.h"
 
-#include "stdafx.h"
-#include "HID.h"
+static HID hid;
+static std::map<HANDLE, Device> map;
 
-#define DLLEXAM_EXPORTS
-#ifdef DLLEXAM_EXPORTS
-#define DLLAPI __declspec(dllexport)
-#else
-#define DLLAPI __declspec(dllimport)
-#endif
+__declspec(dllexport) HANDLE	__stdcall HID_Open(UINT16 pid, UINT16 vid, UINT16 sn, UINT16 page, UINT16 usage);
+__declspec(dllexport) bool		__stdcall HID_Write(HANDLE DeviceHandle, BYTE data[], int length);
+__declspec(dllexport) bool		__stdcall HID_Read(HANDLE DeviceHandle, BYTE buffer[], int length);
 
-HID hid;
-std::map<HANDLE, Device> map;
-
-DLLAPI HANDLE __stdcall OpenDevice(uint16_t pid, uint16_t vid, uint16_t sn, uint16_t page, uint16_t usage);
-DLLAPI bool __stdcall WriteData(HANDLE handle, BYTE data[], int length);
-DLLAPI bool __stdcall ReadData(HANDLE handle, BYTE buffer[], int length);
-
-HANDLE __stdcall OpenDevice(uint16_t pid, uint16_t vid, uint16_t sn, uint16_t page, uint16_t usage)
+HANDLE __stdcall HID_Open(UINT16 pid, UINT16 vid, UINT16 sn, UINT16 page, UINT16 usage)
 {
-	Device device;
+	Device device{ 0 };
 	bool found = false;
-	hid.enumDevices([pid, vid, sn, page, usage, &found](Device device) {
-		if (device.attributes.ProductID == pid &&
-			device.attributes.VendorID == vid &&
-			device.attributes.VersionNumber == sn &&
-			device.caps.UsagePage == page &&
-			device.caps.Usage == usage) {
+	hid.EnumDevice([pid, vid, sn, page, usage, &found](Device device) {
+		if (device.Attributes.ProductID == pid &&
+			device.Attributes.VendorID == vid &&
+			device.Attributes.VersionNumber == sn &&
+			device.Caps.UsagePage == page &&
+			device.Caps.Usage == usage) {
 			found = true;
 			return true;
 		}
 		return false;
 	});
 	if (found) {
-		map[device.handle] = device;
-		return device.handle;
+		map[device.DeviceHandle] = device;
+		return device.DeviceHandle;
 	}
 	return 0;
 }
 
-bool __stdcall WriteData(HANDLE handle, BYTE data[], int length)
+bool __stdcall HID_Write(HANDLE DeviceHandle, BYTE data[], int length)
 {
-	if (map.find[handle] == map.find.end())
+	if (map.find(DeviceHandle) == map.end())
 		return false;
-	return hid.writeData(map[handle], data, length);
+	return hid.Write(map[DeviceHandle], data, length);
 }
 
-bool __stdcall ReadData(HANDLE handle, BYTE buffer[], int length)
+bool __stdcall HID_Read(HANDLE DeviceHandle, BYTE buffer[], int length)
 {
-	if (map.find[handle] == map.find.end())
+	
+	if (map.find(DeviceHandle) == map.end())
 		return false;
-	return hid.readData(map[handle], buffer, length);
+	return hid.Read(map[DeviceHandle], buffer, length);
 }
 
-BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
+BOOL APIENTRY DllMain( HMODULE Handle,
+                       DWORD  Reason,
+                       LPVOID
                      )
 {
-    switch (ul_reason_for_call)
+    if (Reason == DLL_PROCESS_DETACH)
     {
-    case DLL_PROCESS_ATTACH:
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
-		for (auto i : map) {
+		for (auto& i : map) {
 			CloseHandle(i.first);
 		}
-        break;
     }
     return TRUE;
 }

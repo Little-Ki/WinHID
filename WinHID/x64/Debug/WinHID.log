@@ -1,0 +1,11 @@
+﻿  dllmain.cpp
+  HID.cpp
+C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.29.30037\include\memory(3416,35): warning C4244: “初始化”: 从“const USHORT”转换到“_Ty”，可能丢失数据
+          with
+          [
+              _Ty=BYTE
+          ]
+F:\Codes\C++ Own\WinHID\WinHID\HID.cpp(125): message : 查看对正在编译的函数 模板 实例化“std::unique_ptr<BYTE,std::default_delete<BYTE>> std::make_unique<BYTE,const USHORT&,0>(const USHORT &)”的引用
+  正在生成代码...
+    正在创建库 F:\Codes\C++ Own\WinHID\x64\Debug\WinHID.lib 和对象 F:\Codes\C++ Own\WinHID\x64\Debug\WinHID.exp
+  WinHID.vcxproj -> F:\Codes\C++ Own\WinHID\x64\Debug\WinHID.dll
